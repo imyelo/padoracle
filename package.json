@@ -1,0 +1,19 @@
+{
+  "name": "padoracle",
+  "version": "0.0.0",
+  "description": "Padding Oracle Attack with Node.js",
+  "main": "lib",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imyelo/padoracle.git"
+  },
+  "keywords": [],
+  "author": "yelo <zhihuzeye@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/imyelo/padoracle/issues"
+  },
+  "homepage": "https://github.com/imyelo/padoracle#readme"
+}
