@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Padding Oracle Attack with Node.js",
   "main": "lib",
+  "bin": {
+    "padoracle": "bin/padoracle.js"
+  },
   "engines": {
     "node": ">=8"
   },
@@ -20,11 +23,14 @@
   "homepage": "https://github.com/imyelo/padoracle#readme",
   "devDependencies": {
     "ava": "^1.4.1",
+    "delay": "^4.2.0",
     "pkcs7": "^1.0.2"
   },
   "dependencies": {
     "eventemitter3": "^3.1.2",
+    "keymirror": "^0.1.1",
     "left-pad": "^1.3.0",
-    "log-update": "^3.2.0"
+    "log-update": "^3.2.0",
+    "mobx": "^5.9.4"
   }
 }

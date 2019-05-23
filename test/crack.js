@@ -1,7 +1,8 @@
 const test = require('ava')
-const { Crypto } = require('./helpers/crypto')
+const delay = require('delay')
 const pkcs7 = require('pkcs7')
-const padoracle = require('..')
+const { Crypto } = require('./helpers/crypto')
+const Cracker = require('..')
 
 const crackme = (() => {
   const KEY = Buffer.from('abcdefghijklmnopqrstuvwxyz123456')
@@ -29,7 +30,8 @@ const crackme = (() => {
       welcome () {
         return createToken()
       },
-      auth (token) {
+      async auth (token) {
+        await delay(1)
         return getSession(token)
       },
       BLOCK_SIZE,
@@ -46,15 +48,18 @@ test('crack program with aes-256-cbc', async (t) => {
 
   const challenge = async (iv, cipher) => {
     try {
-      crackme.api.auth(Buffer.concat([iv, cipher]).toString('base64'))
+      await crackme.api.auth(Buffer.concat([iv, cipher]).toString('base64'))
     } catch (error) {
       return false
     }
     return true
   }
 
-  const result = await padoracle.crack(token.slice(0, size), token.slice(size), challenge)
-  const plain = pkcs7.unpad(result.plain).toString()
+  let result, plain
+
+  let cracker = new Cracker()
+  result = await cracker.crack(token.slice(0, size), token.slice(size), challenge)
+  plain = pkcs7.unpad(result.plain).toString()
 
   t.true(crackme.verifyPlainText(plain))
 })
