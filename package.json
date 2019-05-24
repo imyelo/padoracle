@@ -27,10 +27,16 @@
     "pkcs7": "^1.0.2"
   },
   "dependencies": {
+    "esm": "^3.2.25",
     "eventemitter3": "^3.1.2",
+    "import-jsx": "^2.0.0",
+    "ink": "^2.2.0",
+    "ink-divider": "^2.0.0",
     "keymirror": "^0.1.1",
     "left-pad": "^1.3.0",
     "log-update": "^3.2.0",
-    "mobx": "^5.9.4"
+    "meow": "^5.0.0",
+    "mobx": "^5.9.4",
+    "react": "^16.8.6"
   }
 }

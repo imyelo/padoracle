@@ -1,40 +1,61 @@
 #!/usr/bin/env node
 
-const log = require('log-update')
-const { observe } = require('mobx')
-const Cracker = require('..')
-const EVENTS = Cracker.EVENTS
+const { resolve } = require('path')
+const React = require('react')
+const { render } = require('ink')
+const meow = require('meow')
+const esm = require('esm')
+const jsx = require('import-jsx')
 
-let cracker = new Cracker()
+const ui = jsx('./ui')
 
-observe(cracker.state, 'intermediary', ({ newValue: intermediary }) => {
-  console.log('Intermediary value:', intermediary.toString('hex'))
-})
-observe(cracker.state, 'plain', ({ newValue: plain }) => {
-  console.log('Plain text:', plain.toString())
-  console.log('Plain text (hex):', plain.toString('hex'))
-})
+;(() => {
+  const cli = meow(`
+    Usage
+      $ padoracle <challenge-script> --iv-cipher <iv-cipher> --size 16
 
-cracker.broadcast.addListener(EVENTS.CRACK_START, () => {
-  console.log('--- Crack start ---')
-})
-cracker.broadcast.addListener(EVENTS.CRACK_END, () => {
-  console.log('---  Crack end  ---')
-})
-cracker.broadcast.addListener(EVENTS.ORIGINAL_KEY_FOUND, ({ block, padding, hex }) => {
-  log(`Current block: ${block}, padding: ${padding}\nkey found: (backup)`, `0x${hex}`)
-})
-cracker.broadcast.addListener(EVENTS.REPLACEMENT_KEY_FOUND, ({ block, padding, hex }) => {
-  log(`Current block: ${block}, padding: ${padding}\nkey found:`, `0x${hex}`)
-})
-cracker.broadcast.addListener(EVENTS.INVALID_KEY_FOUND, ({ block, padding, hex }) => {
-  log(`Current block: ${block}, padding: ${padding}\ninvalid:`, `0x${hex}`)
-})
-cracker.broadcast.addListener(EVENTS.TRAVERSING_KEY_END, () => {
-  log.done()
-})
+    Options
+      challenge-script  A script which sends the decryption challenge to the target system.
+      --iv-cipher       An iv-cipher pair which can pass the padding check (with base64 encoded).
+      --size            Size of each block (in bytes).
 
-if (module.parent) {
-  module.exports = async (...args) => await cracker.crack(...args)
-  return
-}
+    Examples
+      $ padoracle ./exmaples/crackme-challenge.js --iv-cipher UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0 --size 16
+  `, {
+  flags: {
+    ivCipher: {
+      type: 'string',
+    },
+    size: {
+      type: 'string',
+    },
+  },
+  })
+
+  if (!cli.input.length) {
+    return cli.showHelp()
+  }
+
+  const script = esm(module)(resolve(process.cwd(), cli.input[0]))
+
+  if (!script || !script.default) {
+    throw new Error('Invalid challenge script.')
+  }
+
+  if (!cli.flags.ivCipher) {
+    throw new Error('<iv-cipher> is required.')
+  }
+
+  const token = Buffer.from(cli.flags.ivCipher, 'base64')
+  const size = +cli.flags.size
+
+  if (!size) {
+    throw new Error('<size> is required.')
+  }
+
+  const iv = token.slice(0, size)
+  const cipher = token.slice(size)
+
+  render(React.createElement(ui, { challenge: script.default, iv, cipher }))
+
+})()
