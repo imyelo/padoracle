@@ -1,6 +1,6 @@
 const React = require('react')
 const { observe } = require('mobx')
-const { Box, Text, Static } = require('ink')
+const { Box, Text } = require('ink')
 const pad = require('left-pad')
 const pkcs7 = require('pkcs7')
 const Cracker = require('..')
@@ -10,6 +10,60 @@ const KEY_STATUS = {
   ORIGINAL: 'ORIGINAL',
   REPlACEMENT: 'REPLACEMENT',
   INVALID: 'INVALID',
+}
+
+const Block = ({ iv, cipher, intermediary, block, sample, padding }) => {
+  const format = (buf) => {
+    const DIVIDER = '|'
+    return Array.from(buf)
+      .map((v) => v > 0
+        ? pad(v.toString(16), 2, '0')
+        : '??'
+      )
+      .join(DIVIDER)
+  }
+
+  const slice = ((size) => (buf, block) =>
+    buf.slice(block * size, (block + 1) * size)
+  )(iv.length)
+
+  const tamperedPlain = ((size, padding) => {
+    let buf = Buffer.alloc(size)
+    return buf.map((v, i) => {
+      if (size - i > padding - 1) {
+        return v
+      }
+      return padding
+    })
+  })(iv.length, padding)
+
+  return (
+    <Box flexDirection="column">
+      <Box>
+        <Text>----- Block {block} -----</Text>
+      </Box>
+      <Box>
+        <Text>Cipher ({block})                : </Text>
+        <Text>{format(slice(cipher, block))}</Text>
+      </Box>
+      <Box>
+        <Text>Intermediary ({block})          : </Text>
+        <Text>{format(slice(intermediary, block))}</Text>
+      </Box>
+      <Box>
+        {
+          block > 0
+            ? <Text>Cipher ({block - 1}) (Tampered)     : </Text>
+            : <Text>Initial Vector (Tampered) : </Text>
+        }
+        <Text>{format(slice(sample, block))}</Text>
+      </Box>
+      <Box>
+        <Text>Plain ({block}) (Tampered)      : </Text>
+        <Text>{format(tamperedPlain)}</Text>
+      </Box>
+    </Box>
+  )
 }
 
 function App ({ challenge, iv, cipher }) {
@@ -72,55 +126,15 @@ function App ({ challenge, iv, cipher }) {
     INVALID: 'invalid:'
   }[key.status]
 
-  const format = (buf) => {
-    const DIVIDER = '|'
-    return Array.from(buf)
-      .map((v) => v > 0
-        ? pad(v.toString(16), 2, '0')
-        : '??'
-      )
-      .join(DIVIDER)
+  const common = {
+    iv,
+    cipher,
+    intermediary,
   }
-
-  const slice = ((size) => (buf, block) =>
-    buf.slice(block * size, (block + 1) * size)
-  )(iv.length)
-
-  const tamperedPlain = ((size, padding) => {
-    let buf = Buffer.alloc(size)
-    return buf.map((v, i) => {
-      if (size - i > padding - 1) {
-        return v
-      }
-      return padding
-    })
-  })(iv.length, key.padding)
 
   return (
     <Box flexDirection="column">
-      <Box>
-        <Text>----- Block {key.block} -----</Text>
-      </Box>
-      <Box>
-        <Text>Cipher ({key.block})                : </Text>
-        <Text>{format(slice(cipher, key.block))}</Text>
-      </Box>
-      <Box>
-        <Text>Intermediary ({key.block})          : </Text>
-        <Text>{format(slice(intermediary, key.block))}</Text>
-      </Box>
-      <Box>
-        {
-          key.block > 0
-            ? <Text>Cipher ({key.block - 1}) (Tampered)     : </Text>
-            : <Text>Initial Vector (Tampered) : </Text>
-        }
-        <Text>{format(slice(key.sample, key.block))}</Text>
-      </Box>
-      <Box>
-        <Text>Plain ({key.block}) (Tampered)      : </Text>
-        <Text>{format(tamperedPlain)}</Text>
-      </Box>
+      <Block {...common} {...key} />
       {
         plain
           ? <div>
