@@ -12,7 +12,7 @@ const crackme = (() => {
   const BLOCK_SIZE = DEFAULT_IV.length
 
   const DEFAULT_SESSION = '{"id":100,"roleAdmin":false}'
-  const TARGET_SESSION = '{"id":1,"roleAdmin":true,"name":"yelo"}'
+  const TARGET_SESSION = '{"id":1,"roleAdmin":true,"name":"yelo","url":"https://yelo.cc"}'
 
   const crypto = new Crypto(KEY)
 
