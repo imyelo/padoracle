@@ -4,12 +4,15 @@ const pkcs7 = require('pkcs7')
 const { Crypto } = require('./helpers/crypto')
 const Cracker = require('..')
 
+const DELAY = process.env.DELAY || 0
+
 const crackme = (() => {
   const KEY = Buffer.from('abcdefghijklmnopqrstuvwxyz123456')
   const DEFAULT_IV = Buffer.from('PadOracle:iv/cbc')
   const BLOCK_SIZE = DEFAULT_IV.length
 
   const DEFAULT_SESSION = '{"id":100,"roleAdmin":false}'
+  const TARGET_SESSION = '{"id":1,"roleAdmin":true,"name":"yelo"}'
 
   const crypto = new Crypto(KEY)
 
@@ -31,10 +34,13 @@ const crackme = (() => {
         return createToken()
       },
       async auth (token) {
-        await delay(1)
-        return getSession(token)
+        if (DELAY) {
+          await delay(DELAY)
+        }
+        return getSession(token) === TARGET_SESSION
       },
       BLOCK_SIZE,
+      TARGET_SESSION,
     },
     verifyPlainText (session) {
       return session === DEFAULT_SESSION
@@ -42,7 +48,7 @@ const crackme = (() => {
   }
 })()
 
-test('crack program with aes-256-cbc', async (t) => {
+test('crack plain text with aes-256-cbc', async (t) => {
   const token = Buffer.from(crackme.api.welcome(), 'base64')
   const size = crackme.api.BLOCK_SIZE
 
@@ -62,4 +68,26 @@ test('crack program with aes-256-cbc', async (t) => {
   plain = pkcs7.unpad(result.plain).toString()
 
   t.true(crackme.verifyPlainText(plain))
+})
+
+test('modify plain text with aes-256-cbc', async (t) => {
+  const size = crackme.api.BLOCK_SIZE
+  const target = crackme.api.TARGET_SESSION
+
+  const token = (iv, cipher) => Buffer.concat([iv, cipher]).toString('base64')
+
+  const challenge = async (iv, cipher) => {
+    try {
+      await crackme.api.auth(token(iv, cipher))
+    } catch (error) {
+      return false
+    }
+    return true
+  }
+
+  let cracker = new Cracker()
+  let { iv, cipher } = await cracker.modify(target, size, challenge)
+  let passed = await crackme.api.auth(token(iv, cipher))
+
+  t.true(passed)
 })
