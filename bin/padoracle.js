@@ -15,9 +15,10 @@ const ui = jsx('./ui')
       $ padoracle <challenge-script> --iv-cipher <iv-cipher> --size 16
 
     Options
-      challenge-script  A script which sends the decryption challenge to the target system.
-      --iv-cipher       An iv-cipher pair which can pass the padding check (with base64 encoded).
-      --size            Size of each block (in bytes).
+      challenge-script     A script which sends the decryption challenge to the target system.
+      --iv-cipher          An iv-cipher pair which can pass the padding check (with base64 encoded).
+      --size, -s           Size of each block (in bytes).
+      --concurrency, -c    Concurrency, Infinity by default.
 
     Examples
       $ padoracle ./examples/crackme-challenge.js --iv-cipher UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0 --size 16
@@ -28,6 +29,11 @@ const ui = jsx('./ui')
     },
     size: {
       type: 'string',
+      alias: 's',
+    },
+    concurrency: {
+      type: 'string',
+      alias: 'c',
     },
   },
   })
@@ -53,9 +59,11 @@ const ui = jsx('./ui')
     throw new Error('<size> is required.')
   }
 
+  const concurrency = +cli.flags.concurrency || Infinity
+
   const iv = token.slice(0, size)
   const cipher = token.slice(size)
 
-  render(React.createElement(ui, { challenge: script.default, iv, cipher }))
+  render(React.createElement(ui, { challenge: script.default, iv, cipher, concurrency }))
 
 })()
