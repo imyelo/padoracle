@@ -9,12 +9,20 @@
   "engines": {
     "node": ">=8"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "ava"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/imyelo/padoracle.git"
   },
-  "keywords": [],
+  "keywords": [
+    "padoracle",
+    "padding",
+    "oracle",
+    "pkcs7",
+    "cbc"
+  ],
   "author": "yelo <zhihuzeye@gmail.com>",
   "license": "Apache-2.0",
   "bugs": {
