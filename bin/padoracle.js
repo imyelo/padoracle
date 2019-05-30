@@ -20,7 +20,7 @@ const ui = jsx('./ui')
       --size            Size of each block (in bytes).
 
     Examples
-      $ padoracle ./exmaples/crackme-challenge.js --iv-cipher UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0 --size 16
+      $ padoracle ./examples/crackme-challenge.js --iv-cipher UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0 --size 16
   `, {
   flags: {
     ivCipher: {
