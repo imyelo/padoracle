@@ -1,5 +1,5 @@
 const React = require('react')
-const { observe } = require('mobx')
+const EventEmitter = require('eventemitter3')
 const { Box, Text } = require('ink')
 const pad = require('left-pad')
 const pkcs7 = require('pkcs7')
@@ -12,30 +12,62 @@ const KEY_STATUS = {
   INVALID: 'INVALID',
 }
 
-const Block = ({ iv, cipher, intermediary, block, sample, padding }) => {
-  const format = (buf) => {
+function alloc(size, value) {
+  return Array.from(new Array(size)).map(() => value)
+}
+
+const bus = new EventEmitter()
+const print = (message) => bus.emit('message', message)
+
+const Block = ({ cracker, block }) => {
+  const [cipher, setCipher] = React.useState([])
+  const [intermediary, setIntermediary] = React.useState([])
+  const [vector, setVector] = React.useState([])
+  const [plain, setPlain] = React.useState([])
+
+  React.useEffect(() => {
+    if (!cracker) {
+      return
+    }
+    const subscribe = (name, handler) => cracker.broadcast.addListener(name, (data) => {
+      if (block !== data.block) {
+        return
+      }
+      handler(data)
+    })
+
+    subscribe(EVENTS.CRACK_BLOCK_START, ({ iv, cipher, block }) => {
+      const size = iv.length
+      const slice = (size => (buf, block) =>
+        buf.slice(block * size, (block + 1) * size))(size)
+
+      setCipher(slice(cipher, block))
+      setIntermediary(alloc(size, '??'))
+      setVector(
+        block === 0 ? iv : slice(cipher, block - 1)
+      )
+      setPlain(alloc(size, '??'))
+    })
+
+    subscribe(EVENTS.CRACK_BLOCK_UPDATE_INTERMEDIARY_AT, ({ block, position, value }) => {
+      setIntermediary((intermediary) => [
+        ...intermediary.slice(0, position),
+        value,
+        ...intermediary.slice(position + 1),
+      ])
+    })
+
+    subscribe(EVENTS.CHALLENGE, ({ block, padding, hex }) => {
+      print(`Challenge start on Block ${block}, Padding ${padding}, Value ${hex} ...`)
+    })
+  }, [cracker, block])
+
+  const format = buf => {
     const DIVIDER = '|'
     return Array.from(buf)
-      .map((v) => v > 0
-        ? pad(v.toString(16), 2, '0')
-        : '??'
-      )
+      .map(v => (typeof v === 'number' ? pad(v.toString(16), 2, '0') : v))
       .join(DIVIDER)
   }
-
-  const slice = ((size) => (buf, block) =>
-    buf.slice(block * size, (block + 1) * size)
-  )(iv.length)
-
-  const tamperedPlain = ((size, padding) => {
-    let buf = Buffer.alloc(size)
-    return buf.map((v, i) => {
-      if (size - i > padding - 1) {
-        return v
-      }
-      return padding
-    })
-  })(iv.length, padding)
 
   return (
     <Box flexDirection="column">
@@ -43,117 +75,96 @@ const Block = ({ iv, cipher, intermediary, block, sample, padding }) => {
         <Text>----- Block {block} -----</Text>
       </Box>
       <Box>
-        <Text>Cipher ({block})                : </Text>
-        <Text>{format(slice(cipher, block))}</Text>
+        <Box flexDirection="column">
+          <Text>Cipher ({block}) : </Text>
+          <Text>Intermediary ({block}) : </Text>
+          <Text>-</Text>
+          {block > 0 ? (
+            <Text>Cipher ({block - 1}) : </Text>
+          ) : (
+            <Text>Initial Vector : </Text>
+          )}
+        </Box>
+        <Box flexDirection="column">
+          <Text>{format(cipher, block)}</Text>
+          <Text>{format(intermediary)}</Text>
+          <Text>-</Text>
+          <Text>{format(vector)}</Text>
+        </Box>
       </Box>
-      <Box>
-        <Text>Intermediary ({block})          : </Text>
-        <Text>{format(slice(intermediary, block))}</Text>
-      </Box>
-      <Box>
-        {
-          block > 0
-            ? <Text>Cipher ({block - 1}) (Tampered)     : </Text>
-            : <Text>Initial Vector (Tampered) : </Text>
-        }
-        <Text>{format(slice(sample, block))}</Text>
-      </Box>
-      <Box>
-        <Text>Plain ({block}) (Tampered)      : </Text>
-        <Text>{format(tamperedPlain)}</Text>
-      </Box>
+      <Divider />
     </Box>
   )
 }
 
-function App ({ challenge, iv, cipher }) {
-  const [key, setKey] = React.useState({
-    block: -1,
-    padding: -1,
-    hex: '??',
-    sample: '',
-    status: KEY_STATUS.INVALID,
-  })
-  const [intermediary, setIntermediary] = React.useState([])
-  const [plain, setPlain] = React.useState()
+const Divider = () => (
+  <div>
+    <div></div>
+    <div>--------------------</div>
+    <div></div>
+  </div>
+)
+
+const Result = ({ plain }) => {
+  return (
+    <div>
+      <Box>Plain text: {pkcs7.unpad(plain).toString()}</Box>
+      <Box>Plain text (hex): {plain.toString('hex')}</Box>
+    </div>
+  )
+}
+
+const Messages = () => {
+  const LEN = 4
+
+  let [messages, setMessages] = React.useState([])
+
+  React.useEffect(() => {
+    bus.on('message', (message) => {
+      setMessages((messages) => [
+        ...messages,
+        message,
+      ])
+    })
+  }, [])
+
+  return <div>
+    <div>Messages:</div>
+    {
+      messages.slice(-1 * LEN).map((msg, i) => (
+        <div key={i}>{msg}</div>
+      ))
+    }
+  </div>
+}
+
+function App({ challenge, iv, cipher }) {
+  const [cracker, setCracker] = React.useState()
+  const [crackResult, setCrackResult] = React.useState({})
+
+  const blocks = Array.from(new Array(cipher.length / iv.length))
 
   React.useEffect(() => {
     let cracker = new Cracker()
-    observe(cracker.state, 'intermediary', ({ newValue }) =>
-      setIntermediary(newValue)
-    )
-    observe(cracker.state, 'plain', ({ newValue }) =>
-      setPlain(newValue)
-    )
-
-    cracker.broadcast.addListener(
-      EVENTS.ORIGINAL_KEY_FOUND,
-      ({ block, padding, hex, sample }) => setKey({
-        block,
-        padding,
-        hex,
-        sample,
-        status: KEY_STATUS.ORIGINAL
-      })
-    )
-    cracker.broadcast.addListener(
-      EVENTS.REPLACEMENT_KEY_FOUND,
-      ({ block, padding, hex, sample }) => setKey({
-        block,
-        padding,
-        hex,
-        sample,
-        status: KEY_STATUS.REPlACEMENT
-      })
-    )
-    cracker.broadcast.addListener(
-      EVENTS.INVALID_KEY_FOUND,
-      ({ block, padding, hex, sample }) =>setKey({
-        block,
-        padding,
-        hex,
-        sample,
-        status: KEY_STATUS.INVALID
-      })
-    )
-
+    setCracker(cracker)
     cracker.crack(iv, cipher, challenge)
+      .then((result) => setCrackResult(result))
   }, [])
-
-  const status = {
-    ORIGINAL: 'key found: (backup)',
-    REPLACEMENT: 'key found:',
-    INVALID: 'invalid:'
-  }[key.status]
-
-  const common = {
-    iv,
-    cipher,
-    intermediary,
-  }
 
   return (
     <Box flexDirection="column">
-      <Block {...common} {...key} />
       {
-        plain
-          ? <div>
-            <Box>
-              Plain text: {pkcs7.unpad(plain).toString()}
-            </Box>
-            <Box>
-              Plain text (hex): {plain.toString('hex')}
-            </Box>
-          </div>
-          : <div>
-            <Box>
-              padding: {key.padding}
-            </Box>
-            <Box>
-              {status} {key.hex}
-            </Box>
-          </div>
+        blocks.map((v, i) => (
+          <Block cracker={cracker} block={i} key={i} />
+        ))
       }
+      <Divider />
+      {
+        crackResult.plain
+          ? <Result plain={crackResult.plain} />
+          : <Messages />
+      }
+      <Divider />
     </Box>
   )
 }
