@@ -1,57 +1,18 @@
 const React = require('react')
-const EventEmitter = require('eventemitter3')
 const { Box, Text } = require('ink')
 const pad = require('left-pad')
-const pkcs7 = require('pkcs7')
-const Cracker = require('..')
+const jsx = require('import-jsx')
+const Cracker = require('../../..')
 const EVENTS = Cracker.EVENTS
+
+const Divider = jsx('./Divider')
+const { print } = jsx('./Messages')
 
 function alloc(size, value) {
   return Array.from(new Array(size)).map(() => value)
 }
 
-const bus = new EventEmitter()
-const print = message => bus.emit('message', message)
-
-const Divider = () => (
-  <div>
-    <div />
-    <div>--------------------</div>
-    <div />
-  </div>
-)
-
-const Messages = () => {
-  const LEN = 4
-
-  let [messages, setMessages] = React.useState([])
-
-  React.useEffect(() => {
-    bus.on('message', message => {
-      setMessages(messages => [...messages, message])
-    })
-  }, [])
-
-  return (
-    <div>
-      <div>Messages:</div>
-      {messages.slice(-1 * LEN).map((msg, i) => (
-        <div key={i}>{msg}</div>
-      ))}
-    </div>
-  )
-}
-
-const Result = ({ plain }) => {
-  return (
-    <div>
-      <Box>Plain text: {pkcs7.unpad(plain).toString()}</Box>
-      <Box>Plain text (hex): {plain.toString('hex')}</Box>
-    </div>
-  )
-}
-
-const Block = ({ cracker, block }) => {
+const Block = ({ cracker, block, iv, cipher }) => {
   const [intermediary, setIntermediary] = React.useState([])
   const [vector, setVector] = React.useState([])
   const [plain, setPlain] = React.useState([])
@@ -61,16 +22,10 @@ const Block = ({ cracker, block }) => {
     if (!cracker) {
       return
     }
-    const subscribe = (name, handler) =>
-      cracker.broadcast.addListener(name, data => {
-        if (block !== data.block) {
-          return
-        }
-        handler(data)
-      })
+
     let size, slice
 
-    subscribe(EVENTS.CRACK_BLOCK_START, ({ iv, cipher, block }) => {
+    const init = ({ iv, cipher, block }) => {
       size = iv.length
       slice = (size => (buf, block) =>
         buf.slice(block * size, (block + 1) * size))(size)
@@ -79,7 +34,21 @@ const Block = ({ cracker, block }) => {
       setVector(block === 0 ? iv : slice(cipher, block - 1))
       setPlain(alloc(size, '??'))
       setIsTampered(true)
-    })
+    }
+
+    const subscribe = (name, handler) =>
+      cracker.broadcast.addListener(name, data => {
+        if (block !== data.block) {
+          return
+        }
+        handler(data)
+      })
+
+    if (iv && cipher) {
+      init({ iv, cipher, block })
+    }
+
+    subscribe(EVENTS.CRACK_BLOCK_START, init)
 
     subscribe(
       EVENTS.CRACK_BLOCK_UPDATE_INTERMEDIARY_AT,
@@ -169,28 +138,4 @@ const Block = ({ cracker, block }) => {
   )
 }
 
-function App({ challenge, iv, cipher, concurrency }) {
-  const [cracker, setCracker] = React.useState()
-  const [crackResult, setCrackResult] = React.useState({})
-
-  const blocks = Array.from(new Array(cipher.length / iv.length))
-
-  React.useEffect(() => {
-    let cracker = new Cracker()
-    setCracker(cracker)
-    cracker.crack(iv, cipher, challenge, concurrency).then(result => setCrackResult(result))
-  }, [])
-
-  return (
-    <Box flexDirection="column">
-      {blocks.map((v, i) => (
-        <Block cracker={cracker} block={i} key={i} />
-      ))}
-      <Divider />
-      {crackResult.plain ? <Result plain={crackResult.plain} /> : <Messages />}
-      <Divider />
-    </Box>
-  )
-}
-
-module.exports = App
+module.exports = Block

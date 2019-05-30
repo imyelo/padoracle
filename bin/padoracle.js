@@ -7,7 +7,8 @@ const meow = require('meow')
 const esm = require('esm')
 const jsx = require('import-jsx')
 
-const ui = jsx('./ui')
+const CrackApp = jsx('./ui/CrackApp')
+const ModifyApp = jsx('./ui/ModifyApp')
 
 const MODE = {
   CRACK: 'CRACK',
@@ -80,14 +81,13 @@ const MODE = {
 
     const concurrency = +cli.flags.concurrency || Infinity
 
-    render(React.createElement(ui, { challenge: script.default, iv, cipher, concurrency }))
+    render(React.createElement(CrackApp, { challenge: script.default, iv, cipher, concurrency }))
   } else {
     if (!cli.flags.plain) {
       throw new Error('<plain> is required.')
     }
     const plain = cli.flags.plain
-    console.log(plain)
 
-    // TODO
+    render(React.createElement(ModifyApp, { challenge: script.default, size, plain }))
   }
 })()
