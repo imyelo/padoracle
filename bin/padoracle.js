@@ -32,8 +32,9 @@ const MODE = {
       --plain, -p          Target plain text.
 
     Examples
-      $ padoracle ./examples/crackme-challenge.js --iv-cipher UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0 --size 16
-      $ padoracle ./examples/crackme-challenge.js --size 16 --plain "{\\"id\\":1,\\"roleAdmin\\":true,\\"name\\":\\"yelo\\",\\"url\\":\\"https://yelo.cc\\"}"
+      $ padoracle ./examples/0.node/challenge.js --iv-cipher UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0 --size 16
+      $ padoracle ./examples/0.node/challenge.js --size 16 --plain "{\\"id\\":1,\\"roleAdmin\\":true,\\"name\\":\\"yelo\\",\\"url\\":\\"https://yelo.cc\\"}"
+      $ padoracle ./examples/0.node/challenge.js --size 16 --plain "{\\"roleAdmin\\":1}"
   `, {
     flags: {
       ivCipher: {

@@ -1,7 +1,7 @@
-const { Crypto } = require('../../test/helpers/crypto')
+const { Crypto } = require('../../common/crypto')
 const delay = require('delay')
 
-const SPEED = 1
+const DELAY = process.env.DELAY || 1
 
 const crackme = (() => {
   const KEY = Buffer.from('abcdefghijklmnopqrstuvwxyz123456')
@@ -30,8 +30,8 @@ const crackme = (() => {
         return createToken()
       },
       async auth (token) {
-        if (SPEED) {
-          await delay(SPEED)
+        if (DELAY) {
+          await delay(DELAY)
         }
         return getSession(token)
       },

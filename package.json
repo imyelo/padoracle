@@ -31,7 +31,8 @@
   "homepage": "https://github.com/imyelo/padoracle#readme",
   "devDependencies": {
     "ava": "^1.4.1",
-    "delay": "^4.2.0"
+    "delay": "^4.2.0",
+    "micro": "^9.3.4"
   },
   "dependencies": {
     "esm": "^3.2.25",
