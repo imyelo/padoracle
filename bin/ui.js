@@ -6,18 +6,50 @@ const pkcs7 = require('pkcs7')
 const Cracker = require('..')
 const EVENTS = Cracker.EVENTS
 
-const KEY_STATUS = {
-  ORIGINAL: 'ORIGINAL',
-  REPlACEMENT: 'REPLACEMENT',
-  INVALID: 'INVALID',
-}
-
 function alloc(size, value) {
   return Array.from(new Array(size)).map(() => value)
 }
 
 const bus = new EventEmitter()
 const print = message => bus.emit('message', message)
+
+const Divider = () => (
+  <div>
+    <div />
+    <div>--------------------</div>
+    <div />
+  </div>
+)
+
+const Messages = () => {
+  const LEN = 4
+
+  let [messages, setMessages] = React.useState([])
+
+  React.useEffect(() => {
+    bus.on('message', message => {
+      setMessages(messages => [...messages, message])
+    })
+  }, [])
+
+  return (
+    <div>
+      <div>Messages:</div>
+      {messages.slice(-1 * LEN).map((msg, i) => (
+        <div key={i}>{msg}</div>
+      ))}
+    </div>
+  )
+}
+
+const Result = ({ plain }) => {
+  return (
+    <div>
+      <Box>Plain text: {pkcs7.unpad(plain).toString()}</Box>
+      <Box>Plain text (hex): {plain.toString('hex')}</Box>
+    </div>
+  )
+}
 
 const Block = ({ cracker, block }) => {
   const [intermediary, setIntermediary] = React.useState([])
@@ -134,44 +166,6 @@ const Block = ({ cracker, block }) => {
       </Box>
       <Divider />
     </Box>
-  )
-}
-
-const Divider = () => (
-  <div>
-    <div />
-    <div>--------------------</div>
-    <div />
-  </div>
-)
-
-const Result = ({ plain }) => {
-  return (
-    <div>
-      <Box>Plain text: {pkcs7.unpad(plain).toString()}</Box>
-      <Box>Plain text (hex): {plain.toString('hex')}</Box>
-    </div>
-  )
-}
-
-const Messages = () => {
-  const LEN = 4
-
-  let [messages, setMessages] = React.useState([])
-
-  React.useEffect(() => {
-    bus.on('message', message => {
-      setMessages(messages => [...messages, message])
-    })
-  }, [])
-
-  return (
-    <div>
-      <div>Messages:</div>
-      {messages.slice(-1 * LEN).map((msg, i) => (
-        <div key={i}>{msg}</div>
-      ))}
-    </div>
   )
 }
 
