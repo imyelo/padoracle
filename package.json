@@ -1,6 +1,6 @@
 {
   "name": "padoracle",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "Padding Oracle Attack with Node.js",
   "main": "lib",
   "bin": {
