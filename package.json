@@ -9,6 +9,10 @@
   "engines": {
     "node": ">=8"
   },
+  "files": [
+    "bin",
+    "lib"
+  ],
   "scripts": {
     "test": "ava",
     "release": "np"
