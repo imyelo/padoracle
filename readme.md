@@ -1,4 +1,4 @@
-# padoracle
+# Padoracle
 > Padding Oracle Attack with Node.js
 
 ## Features
@@ -98,16 +98,16 @@ The Crackme provides two API —— `welcome()` to get a default token and `auth
 Tokens are values encoded in Base64 after concatenating iv and ciphertext. 
 By decrypting this ciphertext with **AES-256-CBC** algorithm and this iv, the Crackme will get a JSON serialized session, which also means that the size of each block in the plaintext, iv, and ciphertext is all **16** (256/16) bytes.
 
-When we have administrator privileges, `auth(token)` API will return a secrect data (`{FLAG}`) to us. Otherwise, that will return nothing. 
+When we have administrator privileges, `auth(token)` API will return a secret data (`{FLAG}`) to us. Otherwise, that will return nothing. 
 
-Also, if there is an exception while decrypting token, the Crackme will throw an error, which is just the characteristic of the Padding Oracle vulnerability.
+Also, if there is an exception while decrypting token, the Crackme will throw an error, which is just the characteristic of [the Padding Oracle vulnerability](https://en.wikipedia.org/wiki/Padding_oracle_attack).
 
-**Our ultimate goal here is to get this secrect data (`{FLAG}`).**
+**Our ultimate goal here is to get this secret data (`{FLAG}`).**
 
 For example, with the `welcome()` API here, we always get the same token value `'UGFkT3JhY2xlOml2L2NiYyiFmLTj7lhu4mAJHakEqcIIoYU0lIUXKx+PmTaUHLV0'`,
 which is concatenated by iv (`<Buffer 50 61 64 4f 72 61 63 6c 65 3a 69 76 2f 63 62 63>`) and cipher (`<Buffer 28 85 98 b4 e3 ee 58 6e e2 60 09 1d a9 04 a9 c2 08 a1 85 34 94 85 17 2b 1f 8f 99 36 94 1c b5 74>`) after base64 decoded.
 
-According to the protocol, we write a [challenge-script](./examples/0.node/challenge.js) accepts a set of iv and ciphertext, which returns `false` when decrypting failed, otherwise, return `true` no matter the final session is valid or not.
+According to [the protocol](#challenge-script), we write a [challenge-script](./examples/0.node/challenge.js) accepts a set of iv and ciphertext, which returns `false` when decrypting failed, otherwise, return `true` no matter the final session is valid or not.
 
 ```javascript
 const crackme = require('./crackme')
@@ -184,7 +184,7 @@ node ./examples/0.node/flag.js
 # {FLAG}
 ```
 
-We did it! ：wink:
+We did it! :wink:
 
 ## API
 ### Installation
@@ -260,6 +260,11 @@ See more examples in [tests](./test) .
   - return `{ intermediary, plain }`
 - Cracker#modify(target, size, challenge)
   - return `{ iv, cipher }`
+- Cracker#broadcast
+
+## References
+- [Padding Oracle Attack](https://en.wikipedia.org/wiki/Padding_oracle_attack)
+- [DDCTF 2019 Web 8](https://yelo.cc/2019/04/17/ddctf-2019-writeups-web-8.html)
 
 ## License
 [Apache-2.0](./license) &copy; [yelo](https://github.com/imyelo)
