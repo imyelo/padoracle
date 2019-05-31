@@ -1,6 +1,11 @@
 # Padoracle
 > Padding Oracle Attack with Node.js
 
+[![npm](https://img.shields.io/npm/v/padoracle.svg?style=flat-square)](https://www.npmjs.com/package/padoracle)
+[![npm](https://img.shields.io/npm/dw/padoracle.svg?style=flat-square)](https://www.npmjs.com/package/padoracle)
+[![license](https://img.shields.io/npm/l/padoracle.svg?style=flat-square)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
 ## Features
 - :video_game: Friendly CLI
 - :electric_plug: Powerful API
