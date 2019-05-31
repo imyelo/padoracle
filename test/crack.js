@@ -39,18 +39,18 @@ const crackme = (() => {
         }
         return getSession(token) === TARGET_SESSION
       },
-      BLOCK_SIZE,
-      TARGET_SESSION,
     },
     verifyPlainText (session) {
       return session === DEFAULT_SESSION
     },
+    BLOCK_SIZE,
+    TARGET_SESSION,
   }
 })()
 
 test('crack plain text with aes-256-cbc', async (t) => {
   const token = Buffer.from(crackme.api.welcome(), 'base64')
-  const size = crackme.api.BLOCK_SIZE
+  const size = crackme.BLOCK_SIZE
 
   const challenge = async (iv, cipher) => {
     try {
@@ -71,8 +71,8 @@ test('crack plain text with aes-256-cbc', async (t) => {
 })
 
 test('modify plain text with aes-256-cbc', async (t) => {
-  const size = crackme.api.BLOCK_SIZE
-  const target = crackme.api.TARGET_SESSION
+  const size = crackme.BLOCK_SIZE
+  const target = crackme.TARGET_SESSION
 
   const token = (iv, cipher) => Buffer.concat([iv, cipher]).toString('base64')
 

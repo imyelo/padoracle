@@ -9,6 +9,7 @@ const crackme = (() => {
   const BLOCK_SIZE = DEFAULT_IV.length
 
   const DEFAULT_SESSION = '{"id":100,"roleAdmin":false}'
+  const FLAG = '{FLAG}'
 
   const crypto = new Crypto(KEY)
 
@@ -33,13 +34,16 @@ const crackme = (() => {
         if (DELAY) {
           await delay(DELAY)
         }
-        return getSession(token)
+        let session = getSession(token)
+        try {
+          session = JSON.parse(session)
+          return session.roleAdmin ? FLAG : null
+        } catch (error) {
+          return false
+        }
       },
-      BLOCK_SIZE,
     },
-    verifyPlainText (session) {
-      return session === DEFAULT_SESSION
-    },
+    BLOCK_SIZE,
   }
 })()
 

@@ -18,11 +18,13 @@ const MODE = {
 ;(() => {
   const cli = meow(`
     Usage
-      $ padoracle <challenge-script> --iv-cipher <iv-cipher> --size 16
+      $ padoracle <challenge-script> --size 16 --iv-cipher <iv-cipher>
+      $ padoracle <challenge-script> --size 16 --plain <plain>
 
     Common Options
       challenge-script     A script which sends the decryption challenge to the target system.
       --size, -s           Size of each block (in bytes).
+      --help, -h           Show the help text.
 
     Crack-Mode Options
       --iv-cipher          An iv-cipher pair which can pass the padding check (with base64 encoded).
