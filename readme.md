@@ -11,7 +11,7 @@
 - :electric_plug: Powerful API
 - :unlock: **Crack** plaintext, with just one set of known iv (initialization-vector) and ciphertext
 - :lock_with_ink_pen: Generate iv and ciphertext with any **modified** plaintext you want
-- :floppy_disk: Programamble challenge script
+- :floppy_disk: Programmable challenge script
 - :dancers: Ultra-fast cracking, with unlimited concurrency
 
 ## CLI
@@ -189,7 +189,9 @@ node ./examples/0.node/flag.js
 # {FLAG}
 ```
 
-We did it! :wink:
+We did it! :tada:
+
+See [more examples](./examples).
 
 ## API
 ### Installation
