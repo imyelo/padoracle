@@ -38,12 +38,12 @@
     "ava": "^5.1.1",
     "delay": "^4.2.0",
     "micro": "^9.3.4",
-    "np": "^8.0.4"
+    "np": "^11.0.2"
   },
   "dependencies": {
     "esm": "^3.2.25",
     "eventemitter3": "^3.1.2",
-    "import-jsx": "^4.0.1",
+    "import-jsx": "^5.0.0",
     "ink": "^2.2.0",
     "ink-divider": "^2.0.0",
     "ink-progress-bar": "^3.0.0",
